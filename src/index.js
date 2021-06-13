@@ -1,7 +1,6 @@
 require('dotenv').config();
 const app = require('express')();
 const cors = require('cors');
-const responseCreator = require('./utils/responseCreator');
 const { endpoints, endpointsOverview } = require('./utils/endpoints');
 const feedid = require('feedid');
 
@@ -14,14 +13,16 @@ app.use((req, res, next) => {
 });
 
 endpoints.forEach((endpoint) => {
-  app.get(`/${endpoint.primary.toLowerCase()}/:category`, async (req, res) => {
+  app.get(`/${endpoint.primary}/:category`, async (req, res) => {
     const { category } = req.params;
 
     try {
       const response = await feedid[endpoint.primary][category]();
-      return res.send(responseCreator(response));
+      return res.send(response);
     } catch (error) {
-      return res.status(404).send(responseCreator());
+      return res
+        .status(404)
+        .send({ data: null, message: 'Not found', success: false });
     }
   });
 });
@@ -29,13 +30,15 @@ endpoints.forEach((endpoint) => {
 app.get('/', (req, res) => {
   return res.send({
     maintainer: 'Renova Muhamad Reza',
-    github: '',
+    github: 'https://github.com/renomureza/api-berita-indonesia',
     endpoints: endpointsOverview,
   });
 });
 
 app.all('*', (req, res) => {
-  return res.status(200).send(responseCreator());
+  return res
+    .status(404)
+    .send({ data: null, message: 'Not found', success: false });
 });
 
 app.listen(PORT, () => {
